@@ -1,9 +1,9 @@
 import type { Event, Hotel, Report, ApprovalDecision, PipelineResult } from '@/lib/types'
 
-const BASE = process.env.NEXT_PUBLIC_APP_URL ?? ''
-
+// Always use relative paths in the browser — avoids CORS when NEXT_PUBLIC_APP_URL
+// points to Supabase or any other non-app origin.
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(path, {
     headers: { 'Content-Type': 'application/json', ...init?.headers },
     ...init,
   })
@@ -24,7 +24,7 @@ export const getHotels = (eventId: string) => apiFetch<Hotel[]>(`/api/hotels?eve
 
 // Reports
 export const getReports = () => apiFetch<Report[]>('/api/reports')
-export const getReportPdfUrl = (id: string) => `${BASE}/api/reports/${id}/export`
+export const getReportPdfUrl = (id: string) => `/api/reports/${id}/export`
 
 // Pipeline
 export const triggerPipeline = (body: {
@@ -45,7 +45,7 @@ export async function uploadExcel(
   form.append('file', file)
   if (eventDetails) form.append('eventDetails', JSON.stringify(eventDetails))
 
-  const res = await fetch(`${BASE}/api/excel/upload`, {
+  const res = await fetch('/api/excel/upload', {
     method: 'POST',
     body: form,
   })
