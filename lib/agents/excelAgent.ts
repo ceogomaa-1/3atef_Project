@@ -2,7 +2,7 @@ import * as XLSX from 'xlsx'
 import type { ExcelParseResult, ExcelRow } from '@/lib/types'
 
 const VENDOR_PRICE_KEYS = ['vendor price', 'vendor_price', 'vendorprice', 'our price', 'contract price']
-const COMPETITOR_PRICE_KEYS = ['competitor price', 'competitor_price', 'market price', 'competition']
+const COMPETITOR_PRICE_KEYS = ['competitor price', 'competitor_price', 'market price', 'competition', 'booking.com', 'booking price']
 const HOTEL_NAME_KEYS = ['hotel name', 'hotel_name', 'hotelname', 'hotel', 'property']
 const ROOM_TYPE_KEYS = ['room type', 'room_type', 'roomtype', 'room']
 const ADDRESS_KEYS = ['address', 'location']
@@ -17,6 +17,16 @@ function findColumn(headers: string[], candidates: string[]): number {
     if (idx !== -1) return idx
   }
   return -1
+}
+
+function parsePrice(value: unknown): number {
+  if (typeof value === 'number') return value
+
+  const normalized = String(value ?? '')
+    .replace(/,/g, '')
+    .match(/-?\d+(\.\d+)?/)?.[0]
+
+  return normalized ? parseFloat(normalized) : 0
 }
 
 export async function runExcelAgent(buffer: Buffer): Promise<ExcelParseResult> {
@@ -73,8 +83,8 @@ export async function runExcelAgent(buffer: Buffer): Promise<ExcelParseResult> {
     const hotelName = hotelCol >= 0 ? String(row[hotelCol] ?? '').trim() : ''
     if (!hotelName) continue
 
-    const vendorPrice = vendorCol >= 0 ? parseFloat(String(row[vendorCol] ?? '0')) : 0
-    const competitorPrice = competitorCol >= 0 ? parseFloat(String(row[competitorCol] ?? '0')) || undefined : undefined
+    const vendorPrice = vendorCol >= 0 ? parsePrice(row[vendorCol]) : 0
+    const competitorPrice = competitorCol >= 0 ? parsePrice(row[competitorCol]) || undefined : undefined
     const roomType = roomCol >= 0 ? String(row[roomCol] ?? '').trim() || undefined : undefined
     const address = addressCol >= 0 ? String(row[addressCol] ?? '').trim() || undefined : undefined
 

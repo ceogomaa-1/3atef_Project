@@ -4,7 +4,7 @@ import { runPipeline } from '@/lib/core/pipeline'
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { eventDetails, eventId } = body
+    const { eventDetails, eventId, excelParseResult } = body
 
     if (!eventDetails) {
       return NextResponse.json({ error: 'eventDetails is required' }, { status: 400 })
@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
       eventDetails.id = eventId
     }
 
-    const result = await runPipeline({ eventDetails })
+    const result = await runPipeline({ eventDetails, excelParseResult })
     return NextResponse.json(result)
   } catch (err) {
     console.error('[POST /api/run]', err)

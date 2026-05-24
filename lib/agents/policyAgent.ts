@@ -9,7 +9,7 @@ const SYSTEM_PROMPT = `You are a hotel booking policy analyst. Given raw hotel p
 1. refund_policy: A single concise sentence describing the refund terms
 2. cancellation_penalty: The cancellation fee or penalty description
 3. no_show_policy: The no-show fee or consequence
-4. risk_flags: Array of strings — only include: "NO REFUND", "100% PENALTY", "NO MODIFICATIONS", "NON-REFUNDABLE", "NO DATE CHANGE" if they apply
+4. risk_flags: Array of strings — only include: "NO REFUND", "100% PENALTY", "NO MODIFICATIONS", "NON-REFUNDABLE", "NO DATE CHANGE", "NO NAME CHANGE" if they apply
 
 Respond ONLY with valid JSON matching: { refund_policy, cancellation_penalty, no_show_policy, risk_flags }`
 

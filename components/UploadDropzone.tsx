@@ -5,7 +5,7 @@ import { Upload, FileSpreadsheet, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { uploadExcel } from '@/lib/api'
 import { cn } from '@/lib/utils'
-import type { ExcelRow } from '@/lib/types'
+import type { Event, ExcelRow } from '@/lib/types'
 
 interface UploadResult {
   parseResult: { rows: ExcelRow[]; eventName?: string; venueName?: string }
@@ -16,9 +16,10 @@ interface UploadResult {
 
 interface UploadDropzoneProps {
   onUploaded?: (result: UploadResult) => void
+  eventDetails?: Partial<Event>
 }
 
-export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
+export function UploadDropzone({ onUploaded, eventDetails }: UploadDropzoneProps) {
   const [dragging, setDragging] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -57,7 +58,7 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
     setLoading(true)
     setError(null)
     try {
-      const res = await uploadExcel(file)
+      const res = await uploadExcel(file, eventDetails)
       setResult(res as UploadResult)
       onUploaded?.(res as UploadResult)
     } catch (err) {
@@ -120,7 +121,7 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
 
       {file && !result && (
         <Button onClick={handleUpload} disabled={loading} className="w-full">
-          {loading ? 'Parsing…' : 'Upload & Parse'}
+          {loading ? 'Checking Booking.com...' : 'Upload & Fill Booking Prices'}
         </Button>
       )}
 
@@ -130,6 +131,7 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
           <div className="flex items-center justify-between">
             <span className="text-sm text-[#888]">
               Parsed {result.totalRows} rows
+              {` - ${result.parseResult.rows.filter((row) => row.competitorPrice != null).length} Booking.com prices filled`}
               {result.parseResult.eventName && ` — ${result.parseResult.eventName}`}
             </span>
             <Button size="sm" variant="ghost" onClick={reset}>Clear</Button>
@@ -140,7 +142,7 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
                 <tr className="border-b border-white/8 bg-white/3">
                   <th className="px-3 py-2 text-left text-[#888]">Hotel</th>
                   <th className="px-3 py-2 text-right text-[#888]">Vendor Price</th>
-                  <th className="px-3 py-2 text-right text-[#888]">Competitor</th>
+                  <th className="px-3 py-2 text-right text-[#888]">Booking.com</th>
                   <th className="px-3 py-2 text-left text-[#888]">Room Type</th>
                 </tr>
               </thead>

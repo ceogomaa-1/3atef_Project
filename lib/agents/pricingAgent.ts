@@ -14,6 +14,25 @@ function matchHotel(scraped: ScrapedHotel, excel: ExcelRow): boolean {
   return aWords.some((word) => b.includes(word)) || b.split(/\s+/).some((w) => w.length > 3 && a.includes(w))
 }
 
+export function enrichExcelRowsWithScrapedPrices(
+  excelRows: ExcelRow[],
+  scrapedHotels: ScrapedHotel[]
+): ExcelRow[] {
+  return excelRows.map((row) => {
+    const match = scrapedHotels.find((hotel) => matchHotel(hotel, row))
+    if (!match) return row
+
+    return {
+      ...row,
+      competitorPrice: match.price,
+      roomType: match.roomType ?? row.roomType,
+      address: row.address ?? match.address,
+      bookingUrl: match.bookingUrl,
+      bookingPolicy: match.rawPolicy ?? match.refundPolicy,
+    }
+  })
+}
+
 export function runPricingAgent(input: PricingInput): Omit<Hotel, 'id' | 'collected_at'>[] {
   const { eventId, scrapedHotels, excelRows } = input
   const results: Omit<Hotel, 'id' | 'collected_at'>[] = []
@@ -41,9 +60,9 @@ export function runPricingAgent(input: PricingInput): Omit<Hotel, 'id' | 'collec
       competitor_price: competitorPrice,
       price_difference: priceDiff,
       is_cheaper_than_vendor: priceDiff !== undefined ? priceDiff <= -4.0 : false,
-      refund_policy: undefined,
-      cancellation_penalty: undefined,
-      no_show_policy: undefined,
+      refund_policy: scraped.refundPolicy,
+      cancellation_penalty: scraped.cancellationPenalty,
+      no_show_policy: scraped.noShowPolicy,
       availability: true,
       booking_url: scraped.bookingUrl,
     })
@@ -67,9 +86,9 @@ export function runPricingAgent(input: PricingInput): Omit<Hotel, 'id' | 'collec
         competitor_price: row.competitorPrice,
         price_difference: undefined,
         is_cheaper_than_vendor: false,
-        refund_policy: undefined,
-        cancellation_penalty: undefined,
-        no_show_policy: undefined,
+        refund_policy: row.bookingPolicy,
+        cancellation_penalty: row.bookingPolicy ? 'Charge 100% of the booking amount.' : undefined,
+        no_show_policy: row.bookingPolicy ? 'Hotel will invoice the total amount of this booking in case of no show.' : undefined,
         availability: true,
         booking_url: undefined,
       })

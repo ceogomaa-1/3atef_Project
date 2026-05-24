@@ -1,4 +1,4 @@
-import type { Event, Hotel, Report, ApprovalDecision, PipelineResult } from '@/lib/types'
+import type { Event, Hotel, Report, ApprovalDecision, PipelineResult, ExcelParseResult } from '@/lib/types'
 
 // Always use relative paths in the browser — avoids CORS when NEXT_PUBLIC_APP_URL
 // points to Supabase or any other non-app origin.
@@ -30,6 +30,7 @@ export const getReportPdfUrl = (id: string) => `/api/reports/${id}/export`
 export const triggerPipeline = (body: {
   eventDetails: Partial<Event>
   eventId?: string
+  excelParseResult?: ExcelParseResult
 }) =>
   apiFetch<PipelineResult>('/api/run', {
     method: 'POST',

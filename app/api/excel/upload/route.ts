@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { runExcelAgent } from '@/lib/agents/excelAgent'
+import { runHotelAgent } from '@/lib/agents/hotelAgent'
+import { enrichExcelRowsWithScrapedPrices } from '@/lib/agents/pricingAgent'
 import { createServiceClient } from '@/lib/supabase/server'
+import type { Event } from '@/lib/types'
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,12 +28,34 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes)
 
     const parseResult = await runExcelAgent(buffer)
+    let eventDetails: Partial<Event> | undefined
+
+    if (eventDetailsRaw) {
+      try {
+        eventDetails = JSON.parse(eventDetailsRaw)
+      } catch {
+        eventDetails = undefined
+      }
+    }
+
+    if (eventDetails?.city && eventDetails?.country && parseResult.rows.length > 0) {
+      const scrapedHotels = await runHotelAgent({
+        city: eventDetails.city,
+        country: eventDetails.country,
+        venueName: eventDetails.venue_name ?? parseResult.venueName,
+        checkIn: eventDetails.start_date,
+        checkOut: eventDetails.end_date,
+        hotelNames: parseResult.rows.map((row) => row.hotelName),
+        requireStrictPolicy: true,
+      })
+
+      parseResult.rows = enrichExcelRowsWithScrapedPrices(parseResult.rows, scrapedHotels)
+    }
 
     // If eventDetails provided, also create an event record linked to the parse
     let eventId: string | undefined
-    if (eventDetailsRaw) {
+    if (eventDetails) {
       try {
-        const eventDetails = JSON.parse(eventDetailsRaw)
         const supabase = createServiceClient()
 
         const payload = {

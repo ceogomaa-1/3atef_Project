@@ -91,6 +91,8 @@ export interface ExcelRow {
   competitorPrice?: number
   roomType?: string
   address?: string
+  bookingUrl?: string
+  bookingPolicy?: string
 }
 
 export interface ExcelParseResult {
@@ -121,6 +123,10 @@ export interface ScrapedHotel {
   roomType?: string
   price: number
   bookingUrl?: string
+  refundPolicy?: string
+  cancellationPenalty?: string
+  noShowPolicy?: string
+  rawPolicy?: string
 }
 
 export interface PolicyAnalysis {

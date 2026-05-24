@@ -63,6 +63,7 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
     checkIn: event.start_date,
     checkOut: event.end_date,
     hotelNames: excelData?.rows.map((r) => r.hotelName),
+    requireStrictPolicy: true,
   })
 
   // Step 5: Compare pricing
@@ -74,17 +75,21 @@ export async function runPipeline(input: PipelineInput): Promise<PipelineResult>
 
   // Step 6: Analyze booking policies (GPT-4o)
   const policyMap = await runPolicyAgent(
-    pricingRows.map((h) => ({ name: h.name, rawPolicy: h.refund_policy }))
+    pricingRows.map((h) => ({
+      name: h.name,
+      rawPolicy: [h.refund_policy, h.cancellation_penalty, h.no_show_policy].filter(Boolean).join(' '),
+    }))
   )
 
   // Merge policy data into pricing rows
   const enrichedRows = pricingRows.map((h) => {
     const policy = policyMap.get(h.name)
+    const analysisMissing = !policy || policy.refundPolicy === 'Analysis unavailable'
     return {
       ...h,
-      refund_policy: policy?.refundPolicy,
-      cancellation_penalty: policy?.cancellationPenalty,
-      no_show_policy: policy?.noShowPolicy,
+      refund_policy: analysisMissing ? h.refund_policy : policy.refundPolicy,
+      cancellation_penalty: analysisMissing ? h.cancellation_penalty : policy.cancellationPenalty,
+      no_show_policy: analysisMissing ? h.no_show_policy : policy.noShowPolicy,
     }
   })
 

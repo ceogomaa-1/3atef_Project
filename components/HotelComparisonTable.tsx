@@ -121,7 +121,7 @@ function PolicyRiskCell({ hotel }: { hotel: Hotel }) {
 
   if (text.includes('NO REFUND') || text.includes('NON-REFUNDABLE')) flags.push('NR')
   if (text.includes('100%')) flags.push('100%')
-  if (text.includes('NO MODIFICATION') || text.includes('NO DATE CHANGE')) flags.push('RIGID')
+  if (text.includes('NO MODIFICATION') || text.includes('NO DATE CHANGE') || text.includes('NO NAME CHANGE')) flags.push('RIGID')
 
   if (flags.length === 0) {
     return <span className="text-xs text-[#555]">—</span>

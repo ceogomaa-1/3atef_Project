@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { triggerPipeline } from '@/lib/api'
-import type { ExcelRow } from '@/lib/types'
+import type { Event, ExcelRow } from '@/lib/types'
 
 interface UploadResult {
   parseResult: { rows: ExcelRow[]; eventName?: string; venueName?: string }
@@ -26,6 +26,13 @@ export default function UploadPage() {
   const [city, setCity] = useState('')
   const [country, setCountry] = useState('')
 
+  const eventDetails: Partial<Event> = {
+    name: eventName,
+    type: eventType as Event['type'],
+    city,
+    country,
+  }
+
   async function handleRun() {
     if (!uploadResult?.eventId) return
     setRunning(true)
@@ -34,11 +41,12 @@ export default function UploadPage() {
         eventDetails: {
           id: uploadResult.eventId,
           name: eventName || uploadResult.parseResult.eventName,
-          type: eventType as 'medical',
+          type: eventType as Event['type'],
           city,
           country,
         },
         eventId: uploadResult.eventId,
+        excelParseResult: uploadResult.parseResult,
       })
       router.push(`/dashboard/events/${result.event.id}`)
     } catch (err) {
@@ -95,7 +103,7 @@ export default function UploadPage() {
       <Card className="mb-6">
         <CardHeader><CardTitle>Excel File</CardTitle></CardHeader>
         <CardContent>
-          <UploadDropzone onUploaded={setUploadResult} />
+          <UploadDropzone onUploaded={setUploadResult} eventDetails={eventDetails} />
         </CardContent>
       </Card>
 
